@@ -1,0 +1,123 @@
+import math
+import matplotlib.pyplot as plt
+import numpy as np
+import sympy as sy
+import scipy.integrate as spi
+
+integrand1 = lambda x: 1/(k*math.pow(CA0*((1+vA*x)/(1+x*eps)), a)*math.pow(CA0*((QB+vB*x)/(1+x*eps)), b))
+integrand2 = lambda x: 1/(k*(math.pow(CA0*((1+vA*x)/(1+x*eps)), a)*math.pow(CA0*((QB+vB*x)/(1+x*eps)), b)-math.pow(CA0*((vC*x)/(1+x*eps)), c)*math.pow(CA0*((vD*x)/(1+x*eps)), d)/Kc))
+integrand3 = lambda x: 1/(k*math.pow(FA0*((1+vA*x)/(1+x*eps)), a)*math.pow(FA0*((QB+vB*x)/(1+x*eps)), b))
+integrand4 = lambda x: 1/(k*(math.pow(FA0*((1+vA*x)/(1+x*eps)), a)*math.pow(FA0*((QB+vB*x)/(1+x*eps)), b)-math.pow(FA0*((vC*x)/(1+x*eps)), c)*math.pow(FA0*((vD*x)/(1+x*eps)), d)/Kc))
+
+def choose_reactor():
+	print("\nSelect the type of Reactor : \n")
+	print("1. Batch Reactor")
+	print("2. CSTR")
+	print("3. PFR")
+	print("4. PBR")
+
+	c2 = int(input("Enter your choice (1/2/3/4) : "))
+
+	return c2
+
+def choose_coeff():
+	print("\nEnter the coeffecients a, b, c, d (Enter 0 for other coeffecient in case of single reactant/product)")
+	a = int(input("a = "))
+	b = int(input("b = "))
+	c = int(input("c = "))
+	d = int(input("d = "))
+
+	l = (a,b,c,d)
+	return l
+
+print("Reactor Volume/Residence time calculator for Isothermal elementary processes")
+input("Enter all the values in standard units\n....Press Enter to continue.... \n")
+
+print("Select the type of Reaction : \n")
+print("1. aA + bB ------> cC + dD , where A is the limiting reagent")
+print("2. aA + bB <-----> cC + dD , where A is the limiting reagent")
+
+c1 = int(input("Enter your choice (1/2) : "))
+l = choose_coeff()
+c2 = choose_reactor()
+k = int(input("Enter the specific rate constant wrt to A in the rate equation :"))
+a, b, c, d = l[0], l[1], l[2], l[3]
+vA = -1
+vB = -l[1]/l[0]
+vC = l[2]/l[0]
+vD = l[3]/l[0]
+delta = vD + vC + vB + vA
+
+
+if c2 == 1:
+
+	V = int(input("Enter the volume of the batch reactor : "))
+	CA0 = int(input("Enter the initial concentration of A in the reactor : "))
+	CB0 = int(input("Enter the initial concentration of B in the reactor : "))
+	QB = CB0/CA0
+
+	yA0 = CA0/(CA0 + CB0)
+	eps = yA0 * delta
+
+	X = float(input("Enter the required conversion in the reactor : "))
+
+	if c1 == 1:
+		x = sy.Symbol("x")
+		I,e = spi.quad(integrand1, 0, X)
+		t = CA0 * I
+		print("The residence time required within the reactor is ", t, " s")
+
+	else:
+		x = sy.Symbol("x")
+		Kc = int(input("Enter the equilibrium constant for the reaction :"))
+		I,e = spi.quad(integrand2, 0, X)
+		t = CA0 * I
+		print("The residence time required within the reactor is ", t, "s")
+
+else:
+	FA0 = int(input("Enter the initial flow rate of A into the reactor : "))
+	FB0 = int(input("Enter the initial flow rate of B into the reactor : "))
+	yA0 = FA0/(FA0 + FB0)
+	QB = FB0/FA0
+	eps = yA0 * delta
+	X = float(input("Enter the required conversion in the reactor : "))
+
+	if c2 == 2:
+
+		if c1 == 1:
+			rA = 1/(k*math.pow(FA0*((1+vA*X)/(1+X*eps)), a)*math.pow(FA0*((QB+vB*X)/(1+X*eps)), b))
+			V = FA0*X/rA
+			print("The required volume for the given conversion is ", V, " L")
+
+		else:
+			Kc = int(input("Enter the equilibrium constant for the reaction : "))
+			rA = 1/(k*(math.pow(FA0*((1+vA*X)/(1+X*eps)), a)*math.pow(FA0*((QB+vB*X)/(1+X*eps)), b)-math.pow(FA0*((vC*X)/(1+X*eps)), c)*math.pow(FA0*((vD*X)/(1+X*eps)), d)/Kc))
+			V = FA0*X/rA
+			print("The required volume for the given conversion is ", V, " L")
+
+	elif c2 == 3:
+		if c1 == 1:
+			x = sy.Symbol("x")
+			I,e = spi.quad(integrand3, 0, X)
+			V = FA0 * I
+			print("The required volume for the given conversion is ", V, " L")
+
+		else:
+			x = sy.Symbol("x")
+			Kc = int(input("Enter the equilibrium constant for the reaction :"))
+			I,e = spi.quad(integrand4, 0, X)
+			V = FA0 * I
+			print("The required volume for the given conversion is ", V, " L")
+
+
+	elif c2 == 4:
+		print("\nEnter the type of process : ")
+
+		x = sy.Symbol("x")
+		I,e = spi.quad(integrand4, 0, X)
+		W = FA0 * I
+		print("The required catalyst weight for the given conversion is ", W, "kg")
+
+
+
+input("Press Enter to exit")
